@@ -1158,7 +1158,7 @@ window.demarrerApp = demarrerApp;
 })();
 
 
-var PRIV={}, UNL={}, UNLPW={}; function GU(k){ if(UNL[k]) return UNL[k]; var a=((window.__DATA||{}).GRP||{})[k], b=(window.__GRPU||{})[k]; if(!a&&!b) return null; return Object.assign({},a||{},b||{}); }
+var PRIV={}, UNL={}, UNLPW={}; window.__ouvrirPriv=function(a,b,c){ return ouvrirPriv(a,b,c); }; function GU(k){ if(UNL[k]) return UNL[k]; var a=((window.__DATA||{}).GRP||{})[k], b=(window.__GRPU||{})[k]; if(!a&&!b) return null; return Object.assign({},a||{},b||{}); }
 /* ===== SUIVI DES ACHATS : budget vs achats directs (DocuWare) + Weldom saisi à la main par semaine ===== */
 (function(){
   var MN=['oct.','nov.','déc.','janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.'];
@@ -1236,7 +1236,7 @@ var PRIV={}, UNL={}, UNLPW={}; function GU(k){ if(UNL[k]) return UNL[k]; var a=(
           h+='<tr><td><b style="color:'+COL[s]+'">'+LBL[s]+'</b></td><td>'+(b?eur(b):'—')+'</td><td>'+eur(a)+'</td><td class="'+(b?(a-b>0?'ko':'ok'):'')+'">'+(b?seur(a-b):'–')+'</td><td>'+mm+'</td></tr>'; }); h+='</tbody></table>'; } }
     h+='<div class="sub" style="color:#737372;font-size:12px;margin-top:10px">Directs : factures, entrées et commandes des fournisseurs directs lues dans DocuWare (la plus avancée de chaque commande). Weldom : saisie manuelle. Budget : fichier budget_achats.json envoyé avec la collecte.'+(((CACHE.G||CACHE[sel]||{}).maj)?' Dernier envoi : '+new Date((CACHE.G||CACHE[sel]).maj).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'.':'')+'</div></div>';
     box.innerHTML=h;
-    box.querySelectorAll('.pills button').forEach(function(b){ b.onclick=function(){ paint(box,b.dataset.s,grp); }; });
+    box.querySelectorAll('.pills button').forEach(function(b){ b.onclick=function(){ var t=b.dataset.s; if(t==='GROUPE'||pwOf(t)||!window.__ouvrirPriv) paint(box,t,grp); else window.__ouvrirPriv(t,box,function(){ if(!box.contains(document.activeElement)||document.activeElement.tagName!=='INPUT') paint(box,t,grp); }); }; });
     box.querySelectorAll('input.w').forEach(function(inp){ inp.onchange=async function(){ var w=inp.dataset.w, txt=inp.value.replace(/\s/g,'').replace(',','.'), val=txt===''?null:parseFloat(txt); if(txt!==''&&isNaN(val)){ inp.className='w er'; return; }
         inp.className='w'; var pw=pwOf(sel);
         try{ var cur2=(await get('visite_achw'+sel,'achw'+sel,pw,false))||{w:{}}; cur2.w=cur2.w||{}; if(val===null) delete cur2.w[w]; else cur2.w[w]=[val,Date.now()];
@@ -1244,6 +1244,19 @@ var PRIV={}, UNL={}, UNLPW={}; function GU(k){ if(UNL[k]) return UNL[k]; var a=(
         catch(e){ inp.className='w er'; inp.title='Enregistrement impossible : réessaie.'; } }; });
   }
   window.__achPage=function(box,store,grp){ if(!box) return; paint(box,grp?'GROUPE':store,grp); };
+  var CSS2='#achov{position:fixed;inset:0;z-index:9500;background:#f4f4f2;overflow:auto;display:none;color:#1d1d1b}#achov.show{display:block}#achov .ah{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;background:#1d1d1b;color:#fff;padding:10px 14px;border-bottom:3px solid #ec6707}#achov .ah button{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer}#achov .am{max-width:1100px;margin:0 auto;padding:12px 16px 40px}';
+  var st2=document.createElement('style'); st2.textContent=CSS2; document.head.appendChild(st2);
+  window.__achOpen=function(sel){
+    var ov=document.getElementById('achov'); if(!ov){ ov=document.createElement('div'); ov.id='achov'; document.body.appendChild(ov); }
+    ov.innerHTML='<div class="ah"><button type="button" class="ab">← Accueil</button><b>Contrôle de gestion · Suivi des achats</b></div><div class="am"><div id="achbox"></div></div>';
+    ov.classList.add('show'); ov.scrollTop=0; ov.querySelector('.ab').onclick=function(){ ov.classList.remove('show'); };
+    var box=ov.querySelector('#achbox'), keep=function(){ return box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT'; };
+    if(sel==='GROUPE'){
+      if(window.__GRPU||!window.__grpBind||!window.__grpHtml) paint(box,'GROUPE',true);
+      else { box.innerHTML=window.__grpHtml; window.__grpBind(box,function(){ if(!keep()) paint(box,'GROUPE',true); }); }
+    } else if(window.__ouvrirPriv) window.__ouvrirPriv(sel,box,function(){ if(!keep()) paint(box,sel,false); });
+    else paint(box,sel,false);
+  };
 })();
 
 window.__fgInfo={};
@@ -1340,10 +1353,10 @@ function demarrerCompta(){
     h+='<h3>Analyse Evrim</h3><div class="g-lecture"><ul style="margin:0 0 0 18px;padding:0">'+C.notes.map(function(x){return '<li style="margin:4px 0">'+x.replace(/</g,'&lt;')+'</li>';}).join('')+'</ul></div>';
     var head=h.slice(0,p0), SYN=h.slice(p0,p1), DET=h.slice(p1,p2), PLA=h.slice(p2,p3), NOT=h.slice(p3);
     var nPlan=A.length, nRed=A.filter(function(a){return a.red;}).length;
-    var TABS=[['syn','Synthèse',''],['det','Détail',''],['plan','Plan d\'action',nPlan],['fg','Frais généraux',''],['ach','Suivi des achats',''],['not','Analyse Comptabilité','']];
-    var BODY={syn:SYN,det:DET,plan:PLA,not:NOT,fg:'<div id="fgbox"></div>',ach:'<div id="achbox"></div>'};
+    var TABS=[['syn','Synthèse',''],['det','Détail',''],['plan','Plan d\'action',nPlan],['fg','Frais généraux',''],['not','Analyse Comptabilité','']];
+    var BODY={syn:SYN,det:DET,plan:PLA,not:NOT,fg:'<div id="fgbox"></div>'};
     function paint(){ root.innerHTML=head+'<div class="v-tabs c-tabs">'+TABS.map(function(t){return '<button type="button" data-ct="'+t[0]+'" class="'+(ctab===t[0]?'on':'')+'">'+t[1]+(t[2]!==''?' <small>'+t[2]+'</small>':'')+'</button>';}).join('')+'</div>'+BODY[ctab]+'</div>';
-      root.querySelectorAll('.c-tabs button').forEach(function(b){ b.onclick=function(){ if(b.dataset.ct==='fg') window.__fgSub=null; ctab=b.dataset.ct; paint(); window.scrollTo({top:0}); }; }); if(ctab==='fg') window.__fgPage(root.querySelector('#fgbox'),[{name:m,carb:UNL[m].CARB,C:C,fg:UNL[m].FG}],false); else if(ctab==='ach') window.__achPage(root.querySelector('#achbox'),m,false); else window.__trophyC(root,m); }
+      root.querySelectorAll('.c-tabs button').forEach(function(b){ b.onclick=function(){ if(b.dataset.ct==='fg') window.__fgSub=null; ctab=b.dataset.ct; paint(); window.scrollTo({top:0}); }; }); if(ctab==='fg') window.__fgPage(root.querySelector('#fgbox'),[{name:m,carb:UNL[m].CARB,C:C,fg:UNL[m].FG}],false); else window.__trophyC(root,m); }
     paint();
   }
   // ===== Carburant : vue interactive (magasin et groupe consolidé) =====
@@ -1655,10 +1668,10 @@ function fgCompta(ents){ var rows=[], per='';
             +'</div>'; }).join('');
         return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:12px">'+cards+'</div><div class="sub" style="margin-top:12px;color:#737372;font-size:13.5px">Touche un magasin pour ouvrir son compte de résultat. Écarts par rapport à l\'exercice précédent (N-1) : <span class="g-up">▲ vert</span> = mieux que l\'an dernier (pour les charges et la masse salariale, une baisse est en vert), <span class="g-dn">▼ rouge</span> = moins bien que l\'an dernier.</div>'; })();
       var gt=window.__gt||'syn', FGX=window.__fgx();
-      function pg(){ var lock=[]; var C0=null, PR=''; Object.keys(PRIV).forEach(function(k){ var g=GU(k); if(!C0&&g&&g.COMPTA&&g.COMPTA.periode) C0=g.COMPTA; }); if(C0){ var MN={janvier:[31,'01'],février:[28,'02'],mars:[31,'03'],avril:[30,'04'],mai:[31,'05'],juin:[30,'06'],juillet:[31,'07'],août:[31,'08'],septembre:[30,'09'],octobre:[31,'10'],novembre:[30,'11'],décembre:[31,'12']}, mm=/(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+(\d{4})/i.exec(C0.periode||''), dd=String(C0.exercice||'').split('→'); if(mm){ var q=MN[mm[1].toLowerCase()], yy=+mm[2], d=q[0]; if(q[1]==='02'&&((yy%4===0&&yy%100!==0)||yy%400===0)) d=29; PR=(dd[0]||'01/10/2025').trim()+' → '+d+'/'+q[1]+'/'+yy; } else PR=C0.exercice; } root.innerHTML='<div class="c-wrap"><div style="text-align:center;margin:6px 0 10px"><h2 style="margin:0 0 8px">Compte de résultat · Cumul exercice</h2>'+(C0?'<span style="display:inline-block;padding:10px 30px;border-radius:999px;background:#1d1d1b;color:#fff;font-weight:800;font-size:clamp(18px,5.5vw,28px);letter-spacing:.3px;white-space:nowrap">'+PR+'</span>':'')+'</div>'+(C0?'<div class="sub" style="color:#737372;font-size:13px;text-align:center;margin:0 0 8px">Groupe · situation arrêtée '+C0.periode+' ('+C0.mois+' mois) · exercice complet '+C0.exercice+'</div>':'<div class="sub" style="color:#737372;font-size:13px">Groupe</div>')+'<div class="v-tabs c-tabs"><button type="button" data-gt="syn" class="'+(gt==='syn'?'on':'')+'">Synthèse</button><button type="button" data-gt="fg" class="'+(gt==='fg'?'on':'')+'">Frais généraux</button><button type="button" data-gt="ach" class="'+(gt==='ach'?'on':'')+'">Suivi des achats</button></div>'+(gt==='syn'?gsyn:gt==='fg'?'<div id="fgbox"></div>':gt==='ach'?'<div id="achbox"></div>':(lock.length?'<div class="sub" style="margin:6px 0;color:#737372">Magasins verrouillés, non comptés : '+lock.map(function(k){ return CBL[k]||k; }).join(', ')+'.</div>':'')+'<div id="cbbox"></div>')+'</div>';
+      function pg(){ var lock=[]; var C0=null, PR=''; Object.keys(PRIV).forEach(function(k){ var g=GU(k); if(!C0&&g&&g.COMPTA&&g.COMPTA.periode) C0=g.COMPTA; }); if(C0){ var MN={janvier:[31,'01'],février:[28,'02'],mars:[31,'03'],avril:[30,'04'],mai:[31,'05'],juin:[30,'06'],juillet:[31,'07'],août:[31,'08'],septembre:[30,'09'],octobre:[31,'10'],novembre:[30,'11'],décembre:[31,'12']}, mm=/(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+(\d{4})/i.exec(C0.periode||''), dd=String(C0.exercice||'').split('→'); if(mm){ var q=MN[mm[1].toLowerCase()], yy=+mm[2], d=q[0]; if(q[1]==='02'&&((yy%4===0&&yy%100!==0)||yy%400===0)) d=29; PR=(dd[0]||'01/10/2025').trim()+' → '+d+'/'+q[1]+'/'+yy; } else PR=C0.exercice; } root.innerHTML='<div class="c-wrap"><div style="text-align:center;margin:6px 0 10px"><h2 style="margin:0 0 8px">Compte de résultat · Cumul exercice</h2>'+(C0?'<span style="display:inline-block;padding:10px 30px;border-radius:999px;background:#1d1d1b;color:#fff;font-weight:800;font-size:clamp(18px,5.5vw,28px);letter-spacing:.3px;white-space:nowrap">'+PR+'</span>':'')+'</div>'+(C0?'<div class="sub" style="color:#737372;font-size:13px;text-align:center;margin:0 0 8px">Groupe · situation arrêtée '+C0.periode+' ('+C0.mois+' mois) · exercice complet '+C0.exercice+'</div>':'<div class="sub" style="color:#737372;font-size:13px">Groupe</div>')+'<div class="v-tabs c-tabs"><button type="button" data-gt="syn" class="'+(gt==='syn'?'on':'')+'">Synthèse</button><button type="button" data-gt="fg" class="'+(gt==='fg'?'on':'')+'">Frais généraux</button></div>'+(gt==='syn'?gsyn:gt==='fg'?'<div id="fgbox"></div>':(lock.length?'<div class="sub" style="margin:6px 0;color:#737372">Magasins verrouillés, non comptés : '+lock.map(function(k){ return CBL[k]||k; }).join(', ')+'.</div>':'')+'<div id="cbbox"></div>')+'</div>';
         root.querySelectorAll('.gcc').forEach(function(c){ var go=function(){ var t=[].filter.call(document.querySelectorAll('#storebar button'),function(x){ return x.dataset.st===c.dataset.gst; })[0]; if(t) t.click(); }; c.onclick=go; c.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } }; });
         root.querySelectorAll('.c-tabs button').forEach(function(b){ b.onclick=function(){ if(b.dataset.gt==='fg') window.__fgSub=null; gt=window.__gt=b.dataset.gt; pg(); }; });
-        if(gt==='ach') window.__achPage(root.querySelector('#achbox'),'GROUPE',true); if(gt==='fg') window.__fgPage(root.querySelector('#fgbox'),Object.keys(PRIV).map(function(k){ return {name:k,carb:GU(k)&&GU(k).CARB,C:GU(k)&&GU(k).COMPTA,fg:GU(k)&&GU(k).FG}; }),true); }
+        if(gt==='fg') window.__fgPage(root.querySelector('#fgbox'),Object.keys(PRIV).map(function(k){ return {name:k,carb:GU(k)&&GU(k).CARB,C:GU(k)&&GU(k).COMPTA,fg:GU(k)&&GU(k).FG}; }),true); }
       pg(); return; }
     ouvrirPriv(m,root,function(){ var C=UNL[m].COMPTA; if(!C){ root.innerHTML='<div class="c-wrap"><h2>Compte de résultat · '+(CBL[m]||m)+'</h2>'+(m==='Creation'?'':'<div class="g-nodata"><b>Pas de données comptables pour '+(CBL[m]||m)+'.</b></div>')+'<div id="fgbox"></div></div>'; window.__fgPage(root.querySelector('#fgbox'),[{name:m,carb:UNL[m].CARB,C:null,fg:UNL[m].FG}],false); return; } draw(m,C); });
   };
@@ -2736,6 +2749,7 @@ window.__reseauRender=function(v){
   var TL=[
    ['perf','📊','Performance commerciale','Chiffre d\'affaires, passages, panier, NAC, marge : par rayon, avec les rangs réseau.','ok'],
    ['fin','🧾','Pilotage financier & comptable','Compte de résultat, frais généraux, analyse comptabilité, rentabilité.','ok'],
+   ['ach','🛒','Contrôle de gestion : suivi des achats','Achats vs budget : directs DocuWare + Weldom saisis chaque semaine, cumul et écart par mois.','ok'],
    ['vis','🏬','Suivi des visites terrain','Préparer, réaliser et analyser les visites ; actions faites à clore.','ok'],
    ['plan','✅','Tâches & plans d\'action','Priorités par rayon, suivi des actions et mesure de leur réalisation.','ok'],
    ['bench','🏆','Benchmark des magasins','Démarche leader : comparer les magasins, copier ce qui marche ailleurs.','ok'],
@@ -2760,6 +2774,7 @@ window.__reseauRender=function(v){
   function sub(rx){ var n=0,t=setInterval(function(){ var b=[].find.call(document.querySelectorAll('button'),function(x){ return rx.test(x.textContent.trim())&&x.offsetParent!==null&&!x.closest('#drw')&&!x.closest('#ck'); }); n++; if(b){ clearInterval(t); b.click(); } else if(n>20) clearInterval(t); },200); }
   function hide(){ ck.classList.remove('show'); window.scrollTo({top:0}); }
   function go(t){
+    if(t==='ach'){ window.__achOpen(store==='RESEAU'?'GROUPE':store); return; }
     if(t==='sirh'){ window.open('https://internalz.fr/','_blank','noopener'); return; }
     if(t==='cs'){ window.open('https://aries2891.github.io/mes-outils/','_blank','noopener'); return; }
     var st=store; if(st==='RESEAU'&&t!=='perf') st='GROUPE';
