@@ -2468,6 +2468,7 @@ window.__logout=function(){try{['tractCacheKey','tractCacheJSON','tractCacheDate
     (function(){ var vt=document.getElementById('verTag'), b=ck.querySelector('.ckv'); if(b){ b.textContent=vt?vt.textContent:'↻'; b.onclick=function(){ if(vt) vt.click(); else location.reload(); }; } })();
     ck.querySelectorAll('.pills button').forEach(function(b){ b.onclick=function(){ store=b.dataset.st; draw(); }; });
     ck.querySelectorAll('button.tile').forEach(function(b){ b.onclick=function(){ go(b.dataset.t); }; });
+    (function(){ var b=ck.querySelector('button.tile[data-t=c9]'); if(!b) return; var best=0; try{ (store?[store]:['Hesingue','Sierentz']).forEach(function(k){ var v=Date.parse(localStorage.getItem('c9maj_'+k)||''); if(v>best) best=v; }); }catch(e){} if(!best) return; var mn=Math.max(0,Math.round((Date.now()-best)/6e4)), tx=mn<2?'à l\'instant':mn<60?'il y a '+mn+' min':mn<1440?'il y a '+Math.round(mn/60)+' h':'il y a '+Math.round(mn/1440)+' j'; var sp=document.createElement('small'); sp.style.cssText='display:inline-block;margin-top:6px;font-size:11px;color:#737372;background:#f4f2ec;border-radius:10px;padding:2px 8px'; sp.textContent='Modifié '+tx; b.appendChild(sp); })();
   }
   function clickStore(st){ var b=[].find.call(document.querySelectorAll('#storebar button'),function(x){ return x.dataset.st===st; }); if(b&&!b.classList.contains('on')) b.click(); }
   function nav(id){ var b=document.getElementById(id); if(b&&!b.classList.contains('on')) b.click(); }
@@ -2641,6 +2642,8 @@ if(typeof document!=='undefined') document.addEventListener('click',function(e){
   }
   function ids(d){ (d.L||[]).forEach(function(x,i){ if(!x.i) x.i='l'+Math.random().toString(36).slice(2,8)+i; }); }
   function num(v){ v=String(v==null?'':v).replace(/[\s\u202f\u00a0€]/g,'').replace(',','.'); if(v==='') return null; var n=parseFloat(v); return isNaN(n)?null:n; }
+  function ilya(t){ var m=Date.parse(t); if(!isFinite(m)) return ''; try{ if(DATA&&0){} }catch(e){} var mn=Math.max(0,Math.round((Date.now()-m)/6e4)); if(mn<2) return 'à l\'instant'; if(mn<60) return 'il y a '+mn+' min'; var h=Math.round(mn/60); if(h<24) return 'il y a '+h+' h'; var j=Math.round(h/24); return 'il y a '+j+' j'; }
+  function memoMaj(st,t){ try{ if(t) localStorage.setItem('c9maj_'+st,t); }catch(e){} }
   async function ecrire(st,d){
     var url=window.__SYNC_URL, pw=pwOf(st); if(!url||!pw) throw new Error('Connexion requise');
     var cs=new Blob([JSON.stringify(d)]).stream().pipeThrough(new CompressionStream('deflate-raw')), z=new Uint8Array(await new Response(cs).arrayBuffer());
@@ -2741,12 +2744,13 @@ if(typeof document!=='undefined') document.addEventListener('click',function(e){
   }
   function draw(){
     var A=allowed(); if(A.length&&A.indexOf(SEL)<0) SEL=A[0];
-    var R=calc(SEL), h='<div class="c9w"><h2>🏗️ Remodeling C9'+(A.length===1?' · '+esc(LBL[A[0]]):'')+'</h2>'+(A.length>1?'<div class="storebar">'+A.map(function(s){ return '<button type="button" data-st="'+s+'" class="'+(s===SEL?'on':'')+'">'+LBL[s]+'</button>'; }).join('')+'</div>':'');
+    var R=calc(SEL), h='<div class="c9w"><h2>🏗️ Remodeling C9'+(A.length===1?' · '+esc(LBL[A[0]]):'')+(DATA[SEL]&&DATA[SEL].maj?' <small class="c9ago" style="font-weight:400;font-size:12px;color:#737372;background:#f4f2ec;border-radius:10px;padding:2px 8px;vertical-align:middle">modifié '+ilya(DATA[SEL].maj)+'</small>':'')+'</h2>'+(A.length>1?'<div class="storebar">'+A.map(function(s){ return '<button type="button" data-st="'+s+'" class="'+(s===SEL?'on':'')+'">'+LBL[s]+'</button>'; }).join('')+'</div>':'');
     var e=ERR[SEL];
     if(!A.length) h+='<div class="nod">Le suivi C9 ne concerne pas ton magasin.</div>';
     else if(LOADING) h+='<div class="nod">Chargement…</div>';
     else if(!DATA[SEL]) h+='<div class="nod">'+(e==='NEW'||!e?'Aucun tableau C9 pour '+esc(LBL[SEL])+' pour le moment.<br><br><button type="button" class="add" id="c9add">+ Ajouter la première ligne</button>':esc(e))+'</div>';
     else h+='<button type="button" class="add" id="c9add">+ Ajouter une ligne</button>'+tiles(R)+'<h3>Par poste</h3>'+barTbl(R)+'<h3>Contrôles de cohérence</h3>'+ctlHtml(R)+'<h3>Fournisseurs</h3>'+fourTbl(R)+'<h3>Détail des lignes</h3>'+detail(R)+(R.d.H&&R.d.H.length?'<details><summary>Dernières modifications</summary><div>'+R.d.H.map(function(x){ return '<div style="padding:4px 0;border-bottom:1px solid #efefed"><small style="color:#737372">'+esc(String(x.t).replace('T',' '))+'</small> · '+esc(x.a)+'</div>'; }).join('')+'</div></details>':'')+'<div class="maj">Dernière modification : '+esc((R.d.maj||'').replace('T',' ').slice(0,16))+'.</div>';
+    if(DATA[SEL]) memoMaj(SEL,DATA[SEL].maj);
     root.innerHTML=h+'</div>';
     root.querySelectorAll('.storebar button').forEach(function(b){ b.onclick=function(){ SEL=b.dataset.st; draw(); root.scrollTop=0; }; });
     var ad=root.querySelector('#c9add'); if(ad) ad.onclick=function(){ editLine(SEL,null,null); };
