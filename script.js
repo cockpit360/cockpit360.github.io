@@ -2627,7 +2627,7 @@ window.__logout=function(){try{['tractCacheKey','tractCacheJSON','tractCacheDate
    ['c9','🏗️','Remodeling C9','Suivi financier du chantier de ton magasin : estimé, commandé, facturé, reste à payer, contrôles.','ok'],];
   var LAB={ok:'Disponible',wip:'En cours',soon:'À venir'}, store='', ck=document.getElementById('ck');
   var PA={perf:'#e8f0fb',fin:'#e4f4ea',ach:'#fdf1dc',vis:'#f3e9f8',plan:'#e3f3f6',bench:'#fdeaea',prod:'#eef0f2',sirh:'#f4f4f2',gg:'#f4f4f2',cs:'#eef0f2',c9:'#fbece0'};
-  var KV={fin:1,ach:1,plan:1,c9:1};
+  var KV={fin:1,ach:1,vis:1,plan:1,c9:1};
   function inf(tx){ return '<span class="inf" tabindex="0" role="note" aria-label="'+String(tx).replace(/"/g,'&quot;')+'" data-i="'+String(tx).replace(/"/g,'&quot;')+'">ⓘ</span>'; }
   function eurK(v){ return Math.abs(v)>=1e6?(v/1e6).toFixed(2).replace('.',',')+' M€':Math.round(v/1000).toLocaleString('fr-FR')+' k€'; }
   function fillK(){
@@ -2636,9 +2636,10 @@ window.__logout=function(){try{['tractCacheKey','tractCacheJSON','tractCacheDate
       if(n&&b){ var e=100*(a-b)/b; K.fin=['CA cumulé '+(e>0?'+':'')+e.toFixed(1).replace('.',',')+' % vs N-1',e>0.05?'#1e7a34':(e<-0.05?'#b21f2d':'#737372'),(gs&&n<4?n+' mag. sur 4':'')]; } }catch(e){}
     try{ var B=window.__GBASE, v=[],j; if(B&&B.mags) S.forEach(function(m){ var t=B.mags[m]&&B.mags[m].tot; if(t&&t.rot>0) v.push(t.rot); });
       if(v.length){ j=v.reduce(function(x,y){return x+y;},0)/v.length; K.ach=['Rotation stock '+Math.round(j)+' j',j<110?'#1e7a34':(j<=120?'#ec6707':'#b21f2d'),(gs?'moyenne des magasins':'')]; } }catch(e){}
+    try{ var vf=window.__visiteFait&&window.__visiteFait(gs?'GROUPE':store); if(vf!=null) K.vis=[vf?'✅ '+vf+' action'+(vf>1?'s':'')+' faite'+(vf>1?'s':'')+' à valider':'✓ Rien à valider','',(gs?'Groupe':''),vf?'on':'off']; }catch(e){}
     try{ var o=0,n2=0; S.forEach(function(m){ var q=window.__plOpen&&window.__plOpen(m); if(q!=null){ o+=q; n2++; } }); if(n2) K.plan=[o+' action'+(o>1?'s':'')+' ouverte'+(o>1?'s':''),o?'#b65807':'#1e7a34',(gs&&n2<4?n2+' mag. sur 4':'')]; }catch(e){}
     try{ var C9=(window.__tK||{}).c9||{}, r9=0,n3=0; S.forEach(function(m){ if(C9[m]!=null){ r9+=C9[m]; n3++; } }); if(n3) K.c9=['Reste à facturer '+eurK(r9),'#b4620a',(gs&&n3>1?n3+' chantiers':'')]; }catch(e){}
-    ck.querySelectorAll('.kv').forEach(function(d){ var k=K[d.dataset.k]; d.innerHTML=k?'<b style="color:'+k[1]+'">'+k[0]+'</b>'+(k[2]?'<small>'+k[2]+'</small>':''):''; });
+    ck.querySelectorAll('.kv').forEach(function(d){ var k=K[d.dataset.k]; d.innerHTML=k?(k[3]?'<span class="kpl '+k[3]+'">'+k[0]+'</span>':'<b style="color:'+k[1]+'">'+k[0]+'</b>')+(k[2]?'<small>'+k[2]+'</small>':''):''; });
   }
   function draw(){
     ck.addEventListener('click',function(e){ if(e.target.closest&&e.target.closest('.lo')) window.__logout(); if(e.target.closest&&e.target.closest('.mn')){ var mb=document.querySelector('#appbar .mbtn'); if(mb) mb.click(); } });
