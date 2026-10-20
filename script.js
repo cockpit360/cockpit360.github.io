@@ -642,6 +642,13 @@ var PRIV={}, UNL={}, UNLPW={}; window.__ouvrirPriv=function(a,b,c){ return ouvri
   }
 
   /* ===== BUDGET du compte de résultat (exercice suivant), envoyé chiffré avec les achats ===== */
+  /* CA magasin du budget = CA HT net + prestations de service + production (lignes du compte d'exploitation) */
+  var CAPRE=/^(ventes? de )?prestations? (de )?services?|prestations? de services? vendues?/i, CAPRO=/^production( vendue)?\s*$/i;
+  function caTot(rows){ var base=(rows||[]).filter(function(x){return x[0]==='CA HT NET';})[0]; if(!base) return null;
+    var r=base.slice(), add=[]; [CAPRE,CAPRO].forEach(function(rx){ var f=(rows||[]).filter(function(x){return x!==base&&rx.test(String(x[0]).trim())&&(x[2]!=null||x[3]!=null);})[0]; if(f) add.push(f); });
+    add.forEach(function(f){ r[2]=(r[2]||0)+(f[2]||0); r[3]=(r[3]||0)+(f[3]||0); });
+    if(add.length){ r[4]=r[2]-r[3]; r[5]=r[3]?100*r[4]/Math.abs(r[3]):null; r[7]=100; r[8]=100; }
+    r.add=add.map(function(f){return f[0];}); return r; }
   function dimp(v){ if(!v) return ''; var d=new Date(v); return isNaN(d)?'':d.toLocaleDateString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',year:'numeric'}); }
   window.__bimp=function(v){ return bimp(v); };
   function bimp(v){ var t=dimp(v); return t?'<div class="sub" style="color:#737372;font-size:12px;margin:-2px 0 8px">📥 Dernier import du budget : <b>'+t+'</b></div>':''; }
@@ -666,7 +673,7 @@ var PRIV={}, UNL={}, UNLPW={}; window.__ouvrirPriv=function(a,b,c){ return ouvri
       var R=B.rows;
       h+='<div class="sub" style="color:#737372;font-size:13px;margin-bottom:8px">Budget de l\'exercice '+B.exercice+', comparé à l\'exercice précédent (N-1). Clique sur une ligne pour voir son détail.</div>';
       h+=bimp(B.importe);
-      h+='<div class="kp">'+['CA HT NET','MARGE BRUTE GLOBALE','EXCEDENT BRUT D EXPLOITATION','RESULTAT NET'].map(function(k){ var r=R.filter(function(x){return x[0]===k;})[0]; if(!r) return ''; var nm={'CA HT NET':'CA HT net','MARGE BRUTE GLOBALE':'Marge brute globale','EXCEDENT BRUT D EXPLOITATION':'EBE','RESULTAT NET':'Résultat net'}[k]; return '<div class="k t-'+ptone(r[4],r[3])+'"><span>'+nm+'</span><b>'+eur(r[2])+'</b><em>'+(r[7]!=null?pc(r[7])+' du CA · ':'')+(r[4]!=null?sg(r[4])+' € '+(function(){ var e=r[5]!=null?r[5]:(r[3]?100*r[4]/Math.abs(r[3]):null); return e==null?'':'(<b>'+(e>0?'+':'')+e.toFixed(1).replace('.',',')+' %</b>) '; })()+'vs N-1':'')+'</em></div>'; }).join('')+'</div>';
+      h+='<div class="kp">'+['CA HT NET','MARGE BRUTE GLOBALE','EXCEDENT BRUT D EXPLOITATION','RESULTAT NET'].map(function(k){ var r=(k==='CA HT NET'?caTot(R):R.filter(function(x){return x[0]===k;})[0]); if(!r) return ''; var nm={'CA HT NET':'CA HT net','MARGE BRUTE GLOBALE':'Marge brute globale','EXCEDENT BRUT D EXPLOITATION':'EBE','RESULTAT NET':'Résultat net'}[k]; return '<div class="k t-'+ptone(r[4],r[3])+'"><span>'+nm+'</span><b>'+eur(r[2])+'</b><em>'+(r[7]!=null?pc(r[7])+' du CA · ':'')+(r[4]!=null?sg(r[4])+' € '+(function(){ var e=r[5]!=null?r[5]:(r[3]?100*r[4]/Math.abs(r[3]):null); return e==null?'':'('+(e>0?'+':'')+e.toFixed(1).replace('.',',')+' %) '; })()+'vs N-1':'')+'</em></div>'; }).join('')+'</div>';
       h+='<h3>Compte d\'exploitation budgété</h3><div style="overflow:auto"><table class="bcr"><thead><tr><th>Poste</th><th>Budget</th><th>N-1</th><th>Écart €</th><th>Écart %</th><th>% CA bud.</th><th>% CA N-1</th></tr></thead><tbody>';
       var gi=0, parent=0, pcost=false;
       R.forEach(function(r){ if(r[2]==null&&r[3]==null) return; var lv=r[1]; if(lv===0){ parent=++gi; pcost=COSTRX.test(r[0]); } var bad=fav(pcost,r[4]);
@@ -679,7 +686,7 @@ var PRIV={}, UNL={}, UNLPW={}; window.__ouvrirPriv=function(a,b,c){ return ouvri
     if(!have.length){ box.innerHTML=h+'<div class="warn"><b>Aucun budget reçu.</b> Lance « Collecte automatique DocuWare » avec le fichier budget_compte_resultat.json.</div></div>'; return; }
     h+='<div class="sub" style="color:#737372;font-size:13px;margin-bottom:8px">Budget de l\'exercice, lignes clés par magasin. Les magasins sans budget reçu s\'afficheront dès l\'envoi.</div>'+(function(){ var t=have.map(function(s_){ var d=dimp(S[s_].CR.importe); return LBL[s_]+' '+(d||'—'); }).join(' · '); return '<div class="sub" style="color:#737372;font-size:12px;margin:-2px 0 8px">📥 Dernier import du budget : <b>'+t+'</b></div>'; })()+'<div style="overflow:auto"><table class="bcr"><thead><tr><th>Poste</th>'+STS.map(function(s){ return '<th style="border-top:5px solid '+COL[s]+'">'+LBL[s]+'</th>'; }).join('')+'<th style="border-top:5px solid #b21f2d">Total reçu</th></tr></thead><tbody>';
     function evg(b,n){ if(b==null||n==null||!n) return ''; var e=100*(b-n)/Math.abs(n); return '<br><small style="font-weight:700;color:'+(e>0.05?'#1e7a34':(e<-0.05?'#b21f2d':'#737372'))+'">'+(e>0?'+':'')+e.toFixed(1).replace('.',',')+' % vs N-1</small>'; }
-    KEYL.forEach(function(k){ var tot=0, totN=0, any=false, anyN=false; h+='<tr class="main cap"><td>'+(k==='EXCEDENT BRUT D EXPLOITATION'?'EBE':k)+'</td>'+STS.map(function(s){ var c=S[s]&&S[s].CR&&S[s].CR.rows, r=c&&c.filter(function(x){return x[0]===k;})[0]; if(!r||r[2]==null) return '<td style="color:#9a9a98">–</td>'; tot+=r[2]; any=true; if(r[3]!=null){ totN+=r[3]; anyN=true; } else totN=NaN; return '<td>'+nb(r[2])+evg(r[2],r[3])+'</td>'; }).join('')+'<td><b>'+(any?nb(tot):'–')+'</b>'+(any&&anyN&&!isNaN(totN)?evg(tot,totN):'')+'</td></tr>'; });
+    KEYL.forEach(function(k){ var tot=0, totN=0, any=false, anyN=false; h+='<tr class="main cap"><td>'+(k==='EXCEDENT BRUT D EXPLOITATION'?'EBE':k)+'</td>'+STS.map(function(s){ var c=S[s]&&S[s].CR&&S[s].CR.rows, r=c&&(k==='CA HT NET'?caTot(c):c.filter(function(x){return x[0]===k;})[0]); if(!r||r[2]==null) return '<td style="color:#9a9a98">–</td>'; tot+=r[2]; any=true; if(r[3]!=null){ totN+=r[3]; anyN=true; } else totN=NaN; return '<td>'+nb(r[2])+evg(r[2],r[3])+'</td>'; }).join('')+'<td><b>'+(any?nb(tot):'–')+'</b>'+(any&&anyN&&!isNaN(totN)?evg(tot,totN):'')+'</td></tr>'; });
     h+='</tbody></table></div></div>'; box.innerHTML=h; }
   window.__crBudget=function(box,sel,grp){ if(box) crPaint(box,grp?'GROUPE':sel,grp); };
   /* ===== ACHATS PAR RAYON : objectif (budget txt) vs réel (DocuWare classé par fournisseur->rayon), stock fin de mois, rotation ===== */
