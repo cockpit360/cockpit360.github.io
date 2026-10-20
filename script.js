@@ -1501,11 +1501,18 @@ function A0(D,o){ return D.actions.concat(o.add).map(function(a){ var b=Object.a
       h+='<div class="gstep-h"><b>Parcours · étape '+(goStep+1)+' sur '+parts.length+' : '+esc(cu.z)+'</b><span>Ordre de visite propre à ce magasin</span></div><div class="gdots">'+parts.map(function(q,i){ var cl=i===goStep?'c':(q.n===0?'d':(q.u?'r':'')); return '<button type="button" class="gdot '+cl+'" data-i="'+i+'" title="'+esc(q.z)+(q.n?' · '+q.n+' à traiter':' · rien à traiter')+'">'+(q.n===0&&i!==goStep?'✓':(i+1))+'</button>'; }).join('')+'</div>'
         +'<div class="gsec-t"><span>Actions ouvertes · rayon '+esc(cu.z)+'</span><b>'+cu.n+'</b></div>'+(cu.n?'':'<div class="gok">✓ Rien à traiter dans le rayon '+esc(cu.z)+'</div>')+cu.html
         +'<div class="gnavb"><button type="button" class="gnav" data-d="-1"'+(goStep===0?' disabled':'')+'>‹ '+(goStep>0?esc(parts[goStep-1].z):'Début')+'</button><button type="button" class="gnav nx" data-d="1"'+(goStep>=parts.length-1?' disabled':'')+'>'+(goStep<parts.length-1?'Suivant : '+esc(parts[goStep+1].z)+' ›':'Dernière étape')+'</button></div>'; }
-    h+='<div class="v-tools"><button type="button" id="gclr">🗑 Vider les photos de cet appareil</button></div>'; return h; }
+    var nph=0; Object.keys(ph).forEach(function(k){ nph+=(ph[k]||[]).length; });
+    h+='<div class="v-tools">'+(nph?'<button type="button" id="gmig" style="min-height:52px;font-size:16px;font-weight:800;background:#1d5fa8;color:#fff;border:0;border-radius:12px;padding:0 16px;margin-bottom:8px">📤 Envoyer mes anciennes photos ('+nph+')</button> ':'')+'<button type="button" id="gclr">🗑 Vider les photos de cet appareil</button></div>'; return h; }
   function goBind(m,o,A){
     try{ pfBind(m,o); }catch(e){}
     function chg(id,fn,msg){ var prev=JSON.stringify([o.st[id]||null,o.pr[id]||null]); fn(); dirty[m]=true; save(m,o); drawV(m); syncNow(m); if(msg) toast(msg,function(){ var p=JSON.parse(prev); if(p[0]) o.st[id]=p[0]; else delete o.st[id]; if(p[1]) o.pr[id]=p[1]; else delete o.pr[id]; dirty[m]=true; save(m,o); drawV(m); syncNow(m); }); }
     root.querySelectorAll('details.gz').forEach(function(d){ d.addEventListener('toggle',function(){ goOpen[d.dataset.s]=d.open; }); });
+    var gmig=document.getElementById('gmig'); if(gmig) gmig.onclick=async function(){ gmig.disabled=true; var ph0=phLoad(m), ids=Object.keys(ph0).filter(function(k){ return ph0[k]&&ph0[k].length; }), done=0, ko=0;
+      for(var ii=0;ii<ids.length;ii++){ var id=ids[ii]; gmig.textContent='📤 Envoi '+(ii+1)+'/'+ids.length+'…';
+        var bl=ph0[id].map(function(u){ try{ var bs=atob(u.split(',')[1]), ar=new Uint8Array(bs.length); for(var q=0;q<bs.length;q++) ar[q]=bs.charCodeAt(q); return new Blob([ar],{type:'image/jpeg'}); }catch(e){ return null; } }).filter(Boolean);
+        var ok=false; try{ ok=bl.length?await window.__pfUp(id,bl):true; }catch(e){ ok=false; }
+        if(ok){ var cur=phLoad(m); delete cur[id]; phSave(m,cur); done++; } else ko++; }
+      try{ alert(done+' action(s) envoyée(s)'+(ko?', '+ko+' à renvoyer (réseau ou limite de 11 photos).':'.')); }catch(e){} drawV(m); };
     root.querySelectorAll('.gdot').forEach(function(b){ b.onclick=function(){ goStep=+b.dataset.i; drawV(m); window.scrollTo(0,0); }; });
     root.querySelectorAll('.gnav').forEach(function(b){ b.onclick=function(){ goStep+=+b.dataset.d; drawV(m); window.scrollTo(0,0); }; });
     var vdi=document.getElementById('vdate'); if(vdi) vdi.onchange=function(){ if(!vdi.value) return; o.vd={v:vdi.value,t:Date.now()}; dirty[m]=true; save(m,o); syncNow(m); }; var vst=document.getElementById('vstart'); if(vst) vst.onclick=function(){ var n=new Date(), td=n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2); goStep=0; if(o.vd.v===td){ drawV(m); window.scrollTo(0,0); return; } var prevVd=JSON.stringify(o.vd); o.vd={v:td,t:Date.now(),p:o.vd.v}; dirty[m]=true; save(m,o); syncNow(m); drawV(m); window.scrollTo(0,0); toast('Visite démarrée le '+td.split('-').reverse().join('/')+' · les actions ouvertes sont conservées',function(){ o.vd=JSON.parse(prevVd); dirty[m]=true; save(m,o); syncNow(m); drawV(m); }); };
@@ -1562,10 +1569,10 @@ function A0(D,o){ return D.actions.concat(o.add).map(function(a){ var b=Object.a
       try{ for(var i=0;i<fl.length;i++){ var used={}; pfList(o,id).forEach(function(x){ used[x.k]=1; }); var k=-1; for(var q=0;q<=10;q++){ if(!used[q]){ k=q; break; } } if(k<0){ pfFail('Maximum de 11 photos par action atteint.'); return; }
           var u=await pfOne(fl[i]); if(!u){ pfFail('Image illisible ou trop lourde (essaie une photo JPG ou PNG).'); return; }
           await pfPut(m,id,u,k||0); PHC[m+'|'+id+(k?'|'+k:'')]=u; o.pf[k?id+'_p'+k:id]={t:Date.now()}; }
-        delete PFBUSY[id]; dirty[m]=true; save(m,o); drawV(m); syncNow(m);
+        delete PFBUSY[id]; dirty[m]=true; save(m,o); drawV(m); syncNow(m); return true;
       }catch(e){ pfFail((e&&e.message==='refus')?'Le script Google a refusé la photo'+(e.det?' : '+e.det:' (taille ou jeton)'):(e&&e.message==='reponse')?'Réponse inattendue du script Google : photo non confirmée.':(e&&e.message==='cle')?'Magasin non déverrouillé : actualise la page.':'Réseau indisponible ou accès refusé ('+((e&&e.message)||'erreur')+').'); drawV(m); } }
-    function pfUp(id,file){ pfUpMany(id,file&&file.length!==undefined&&!file.type?file:[file]); }
-    window.__pfUp=function(id,file){ pfUp(id,file); };
+    function pfUp(id,file){ return pfUpMany(id,file&&file.length!==undefined&&!file.type?file:[file]); }
+    window.__pfUp=function(id,file){ return pfUp(id,file); };
     root.querySelectorAll('.pffile').forEach(function(f){ f.onclick=function(){ f.value=''; }; f.onchange=function(){ pfUpMany(f.dataset.id,f.files); }; });
     root.querySelectorAll('.v-act').forEach(function(card){ var bx=card.querySelector('.pfbox'); if(!bx||!bx.querySelector('.pffile')) return; var id=bx.dataset.id;
       card.addEventListener('dragover',function(e){ e.preventDefault(); card.classList.add('pfdrop'); }); card.addEventListener('dragleave',function(){ card.classList.remove('pfdrop'); });
