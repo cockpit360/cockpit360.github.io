@@ -1397,7 +1397,7 @@ function A0(D,o){ return D.actions.concat(o.add).map(function(a){ var b=Object.a
   function norm(x){ return String(x).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
   function secOf(a){ var z=norm(a.zone); for(var k=0;k<TRAME.length;k++){ if(TRAME[k].m.some(function(w){return z.indexOf(w)>=0;})) return TRAME[k].id; } return 'div'; }
   function tpOf(o,sid){ return Object.keys(o.tp).map(function(id){ return Object.assign({id:id},o.tp[id]); }).filter(function(p){ return p.s===sid&&!p.del; }).sort(function(a,b){ return (a.c0||0)-(b.c0||0); }); }
-  var ORD={Sierentz:['sas','dec','lum','pei','san','sol','ran','cha','boi','ele','plo','jar','amx','out','qui','dro','res']};
+  var ORD={Sierentz:['sas','dec','lum','pei','san','sol','ran','cha','boi','ele','plo','jar','amx','out','qui','dro','res'],Mulhouse:['sas','out','qui','boi','dro','ran','pei','lum','ele','san','plo','jar','dec']};
   function trameList(m,o,A){ var ids=ORD[m], all=TRAME; if(ids){ var by={}; TRAME.forEach(function(t){ by[t.id]=t; });
       var first=ids.map(function(i){ return by[i]; }).filter(Boolean);
       var rest=TRAME.filter(function(t){ return ids.indexOf(t.id)<0 && (tpOf(o,t.id).length||A.some(function(a){ return a.st!=='Clos'&&secOf(a)===t.id; })); });
