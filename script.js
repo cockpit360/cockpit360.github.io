@@ -1486,7 +1486,7 @@ function A0(D,o){ return D.actions.concat(o.add).map(function(a){ var b=Object.a
     if(goStep>=parts.length) goStep=parts.length-1; if(goStep<0) goStep=0;
     if(parts.length){ var cu=parts[goStep];
       h+='<div class="gstep-h"><b>Parcours · étape '+(goStep+1)+' sur '+parts.length+' : '+esc(cu.z)+'</b><span>Ordre de visite propre à ce magasin</span></div><div class="gdots">'+parts.map(function(q,i){ var cl=i===goStep?'c':(q.n===0?'d':(q.u?'r':'')); return '<button type="button" class="gdot '+cl+'" data-i="'+i+'" title="'+esc(q.z)+(q.n?' · '+q.n+' à traiter':' · rien à traiter')+'">'+(q.n===0&&i!==goStep?'✓':(i+1))+'</button>'; }).join('')+'</div>'
-        +'<div class="gsec-t"><span>Actions ouvertes ici</span><b>'+cu.n+'</b></div>'+(cu.n?'':'<div class="gok">✓ Rien à traiter dans cette zone</div>')+cu.html
+        +'<div class="gsec-t"><span>Actions ouvertes · rayon '+esc(cu.z)+'</span><b>'+cu.n+'</b></div>'+(cu.n?'':'<div class="gok">✓ Rien à traiter dans le rayon '+esc(cu.z)+'</div>')+cu.html
         +'<div class="gnavb"><button type="button" class="gnav" data-d="-1"'+(goStep===0?' disabled':'')+'>‹ '+(goStep>0?esc(parts[goStep-1].z):'Début')+'</button><button type="button" class="gnav nx" data-d="1"'+(goStep>=parts.length-1?' disabled':'')+'>'+(goStep<parts.length-1?'Suivant : '+esc(parts[goStep+1].z)+' ›':'Dernière étape')+'</button></div>'; }
     h+='<div class="v-tools"><button type="button" id="gclr">🗑 Vider les photos de cet appareil</button></div>'; return h; }
   function goBind(m,o,A){
