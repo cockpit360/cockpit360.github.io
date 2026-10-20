@@ -236,6 +236,13 @@
   .topnav button{white-space:nowrap}
   .mag-tabs button.mag-mul{font-weight:800;color:#7b3fa0} .mag-tabs button.mag-mul.active{background:#7b3fa0;color:#fff}
   .g-comp{padding:12px 20px 30px}
+  #gcmpx{display:none;padding:6px 20px 20px} #gview.cmpon #gcmpx{display:block} #gview.cmpon #gwrap,#gview.cmpon #gplan,#gview.cmpon #grefs,#gview.cmpon #ghist,#gview.cmpon #gdata{display:none!important}
+  #gcmpx .cm-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0} #gcmpx select{padding:6px 10px;border:1px solid #d6d6d3;border-radius:6px;font-size:14px}
+  #gcmpx .cm-pill{border:1px solid #d6d6d3;background:#fff;border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer} #gcmpx .cm-pill.on{background:#1d1d1b;color:#fff;border-color:#1d1d1b}
+  #gcmpx .cm-lec{background:#fff8ee;border-left:4px solid #ec6707;padding:10px 14px;border-radius:6px;font-size:14px;line-height:1.5;margin:8px 0}
+  #gcmpx .cm-k{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0} #gcmpx .cm-k div{flex:1;min-width:150px;background:#fff;border:1px solid #e6e6e3;border-radius:8px;padding:8px 12px} #gcmpx .cm-k b{display:block;font-size:19px} #gcmpx .cm-k span{font-size:12px;color:#737372}
+  #gcmpx table{border-collapse:collapse;width:100%;font-size:13px;background:#fff} #gcmpx th{background:#1d1d1b;color:#fff;padding:6px 8px;text-align:right;position:sticky;top:0} #gcmpx th:first-child,#gcmpx td:first-child{text-align:left}
+  #gcmpx td{padding:5px 8px;border-bottom:1px solid #efefed;text-align:right;vertical-align:top} #gcmpx td small{display:block;color:#737372;font-size:11px} #gcmpx .cm-ab{background:#e6f0fb;color:#1a5fb4;border-radius:999px;padding:2px 8px;font-size:11.5px;font-weight:700}
   .g-comp h2{font-size:18px;margin:18px 0 4px} .g-comp h2:first-child{margin-top:4px}
   .g-comp .sub{font-size:12.5px;color:#737372;margin-bottom:8px}
   .g-comp table{margin-bottom:6px}
