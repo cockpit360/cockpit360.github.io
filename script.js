@@ -1857,7 +1857,7 @@ function __dg(G){
   const POLES=[["client","👥 Client","passages · panier · NAC"],["commerce","💶 Commerce","CA · Marge · MV"],["stock","📦 Gestion","stock · rotation · poids des achats"],["cmp","🆚 Comparatif","Top 100 rayon vs magasin comparé"]];
   let pole="client";
   /* Comparatif Top 100 d'un rayon : magasin affiché vs magasin comparé (export Booster collé, importé par importer_comparatif.py, bloc chiffré visite_cmpGROUPE) */
-  const CMP={D:null,st:0}; let cmpRay=null, cmpF="all";
+  const CMP={D:null,st:0}; let cmpRay=null, cmpF="all", cmpSK="ca", cmpSA=false;
   function cmpLoad(){ if(CMP.st) return; if(window.__CMP_MOCK){ CMP.D=window.__CMP_MOCK; CMP.st=2; return; } CMP.st=1;
     const gp=window.__GRPPW||((((window.__DATA||{}).AUTO||{}).G)||null);
     if(!gp||!window.__SYNC_URL){ CMP.st=3; return; }
@@ -1867,34 +1867,38 @@ function __dg(G){
       }catch(e){ CMP.st=3; } if(pole==="cmp") render(); })(); }
   function cmpView(){
     const box=document.getElementById("gcmpx"), eh=x=>String(x==null?"":x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-    document.getElementById("gfoot").innerHTML="Comparatif : export Booster « Top 100 du rayon, mon magasin vs le magasin comparé », importé par importer_comparatif.py (ligne à ajouter dans Tout envoyer.bat). Écart € = notre CA − CA du magasin comparé sur la même référence : négatif (rouge) = il vend plus que nous, à rattraper. Rang = rang réseau de la référence.";
+    document.getElementById("gfoot").innerHTML="Comparatif : export Booster « Top 100 du rayon, mon magasin vs le magasin comparé », importé par importer_comparatif.py. Écart € = notre CA − CA du magasin comparé sur la même référence : négatif (rouge) = il vend plus que nous, à rattraper. Rang = rang réseau de la référence.";
     cmpLoad();
     if(CMP.st===1){ box.innerHTML='<div class="sub" style="margin:30px 0;text-align:center">Chargement du comparatif…</div>'; return; }
     const D=CMP.D, S=D&&D.S&&D.S[cur];
-    if(!D){ box.innerHTML='<div class="sub" style="margin:30px 0;text-align:center">Aucun comparatif reçu. Dépose l\'export Booster (nom : « comparatif '+eh(cur)+' peinture.txt ») dans le dossier, puis lance importer_comparatif.py.</div>'; return; }
-    if(!S){ box.innerHTML='<div class="sub" style="margin:30px 0;text-align:center">Pas encore de comparatif pour '+eh(cur)+'. Disponibles : '+(Object.keys(D.S||{}).join(", ")||"aucun")+'.</div>'; return; }
+    if(!D){ box.innerHTML='<div class="sub" style="margin:30px 0;text-align:center">Aucun comparatif reçu. Dépose l\'export Booster (nom : « comparatif '+eh(cur)+' peinture.txt », comparé à Mulhouse) dans le dossier, puis lance importer_comparatif.py.</div>'; return; }
+    if(cur==="Mulhouse"){ box.innerHTML='<div class="sub" style="margin:30px 0;text-align:center">Mulhouse est le magasin comparé : choisis un autre magasin pour voir son comparatif avec Mulhouse.</div>'; return; }
+    if(!S){ box.innerHTML='<div class="sub" style="margin:30px 0;text-align:center">Pas encore de comparatif (avec Mulhouse) pour '+eh(cur)+'. Disponibles : '+(Object.keys(D.S||{}).join(", ")||"aucun")+'.</div>'; return; }
     const rays=Object.keys(S); if(rays.indexOf(cmpRay)<0) cmpRay=rays[0];
-    const Z=S[cmpRay], T=Z.tot||[], ref=eh(D.ref||"Magasin comparé"), R=Z.rows.map(r=>({c:r[0],l:r[1],ca:r[2],cp:r[3],cr:r[4],q:r[5],ca2:r[8],c2p:r[9],c2r:r[10],q2:r[11],d:r[8]==null?r[2]:r[2]-r[8]}));
+    const Z=S[cmpRay], T=Z.tot||[], ref=eh(D.ref||"Mulhouse"), R=Z.rows.map(r=>({c:r[0],l:r[1],ca:r[2],cp:r[3],cr:r[4],q:r[5],ca2:r[8],c2p:r[9],c2r:r[10],q2:r[11],d:r[8]==null?r[2]:r[2]-r[8]}));
     const rat=R.filter(r=>r.ca2!=null&&r.ca2>r.ca), ab=R.filter(r=>r.ca2==null), top=R.reduce((x,r)=>x+(r.ca||0),0), top2=R.reduce((x,r)=>x+(r.ca2||0),0);
-    let L=R.slice(); if(cmpF==="rat") L=rat.slice().sort((a,b)=>a.d-b.d); else if(cmpF==="abs") L=ab; else if(cmpF==="av") L=R.filter(r=>r.ca2!=null&&r.ca>=r.ca2);
+    let L=R.slice(); if(cmpF==="rat") L=rat.slice(); else if(cmpF==="abs") L=ab.slice(); else if(cmpF==="av") L=R.filter(r=>r.ca2!=null&&r.ca>=r.ca2);
+    const SKM={l:"l",ca:"ca",cr:"cr",ca2:"ca2",c2r:"c2r",d:"d"};
+    L.sort((a,b)=>{ const x=a[SKM[cmpSK]],y=b[SKM[cmpSK]]; if(x==null&&y==null) return 0; if(x==null) return 1; if(y==null) return -1; if(typeof x==="string") return cmpSA?x.localeCompare(y):y.localeCompare(x); return cmpSA?x-y:y-x; });
     const worst=rat.slice().sort((a,b)=>a.d-b.d).slice(0,5).map(r=>eh(r.l)+" ("+fmtN(Math.round(r.d))+" €)").join(" · ");
     const dc=(r)=>r.ca2==null?'<span class="cm-ab">Chez nous seulement</span>':'<span class="'+cl(r.d)+'"><b>'+sgnE(r.d)+'</b></span>';
     box.innerHTML=
-      '<div class="cm-bar"><b>'+eh(cur)+' vs '+ref+'</b><select id="cmray">'+rays.map(x=>'<option'+(x===cmpRay?" selected":"")+'>'+eh(x)+'</option>').join("")+'</select>'
+      '<div class="cm-bar"><b>'+ref+' vs magasin comparé : '+eh(cur)+'</b><select id="cmray">'+rays.map(x=>'<option'+(x===cmpRay?" selected":"")+'>'+eh(x)+'</option>').join("")+'</select>'
       +[["all","Toutes ("+R.length+")"],["rat","À rattraper ("+rat.length+")"],["abs","Chez nous seulement ("+ab.length+")"],["av","Notre avance ("+(R.length-rat.length-ab.length)+")"]].map(f=>'<button type="button" class="cm-pill'+(cmpF===f[0]?" on":"")+'" data-f="'+f[0]+'">'+f[1]+'</button>').join("")
       +'<span class="sub" style="margin-left:auto">importé le '+eh(Z.imp||"")+' · envoi du '+eh(D.maj||"")+'</span></div>'
-      +'<div class="cm-k"><div><b>'+fmtN(T[0])+' €</b><span>Rayon '+eh(cmpRay)+' · '+eh(cur)+' '+sp(T[1])+(T[2]?" · n° "+T[2]:"")+'</span></div>'
+      +'<div class="cm-k"><div><b>'+fmtN(T[0])+' €</b><span>Rayon '+eh(cmpRay)+' · magasin comparé ('+eh(cur)+') '+sp(T[1])+(T[2]?" · n° "+T[2]:"")+'</span></div>'
       +'<div><b>'+fmtN(T[6])+' €</b><span>Rayon '+eh(cmpRay)+' · '+ref+' '+sp(T[7])+(T[8]?" · n° "+T[8]:"")+'</span></div>'
       +'<div><b>'+(T[6]!=null?sgnE(T[0]-T[6]):"—")+'</b><span>Écart de CA sur le rayon</span></div>'
       +'<div><b>'+(top>0?fmtN(top2/top*100,0)+" %":"—")+'</b><span>Sur nos '+R.length+' références, ce que vend '+ref+' par rapport à nous</span></div></div>'
       +'<div class="cm-lec">'+(rat.length?'<b>'+rat.length+' référence'+(rat.length>1?"s":"")+' de notre Top '+R.length+(rat.length>1?' se vendent':' se vend')+' mieux chez '+ref+'</b> : '+worst+'. ':'Aucune référence de notre Top '+R.length+' ne se vend mieux chez '+ref+'. ')
       +(ab.length?ab.length+(ab.length>1?' ne sont pas vendues':' n\'est pas vendue')+' chez lui (à lui proposer / à vérifier).':"")+'</div>'
-      +'<div style="overflow:auto"><table><thead><tr><th>Référence</th><th>CA '+eh(cur)+'</th><th>Rang</th><th>CA '+ref+'</th><th>Rang</th><th>Écart €</th></tr></thead><tbody>'
+      +'<div style="overflow:auto"><table><thead><tr>'+[["l","Référence"],["ca","CA magasin comparé ("+eh(cur)+")"],["cr","Rang"],["ca2","CA "+ref],["c2r","Rang"],["d","Écart €"]].map(h=>'<th data-k="'+h[0]+'" style="cursor:pointer" title="Trier">'+h[1]+(cmpSK===h[0]?(cmpSA?" ▲":" ▼"):"")+'</th>').join("")+'</tr></thead><tbody>'
       +L.map(r=>'<tr><td>'+eh(r.l)+'<small>'+eh(r.c)+'</small></td><td><b>'+fmtN(r.ca)+'</b><small>'+sp(r.cp)+' · '+fmtN(r.q)+' u.</small></td><td>'+(r.cr==null?"—":"n° "+r.cr)+'</td>'
          +'<td>'+(r.ca2==null?"—":'<b>'+fmtN(r.ca2)+'</b><small>'+sp(r.c2p)+' · '+fmtN(r.q2)+' u.</small>')+'</td><td>'+(r.c2r==null?"—":"n° "+r.c2r)+'</td><td>'+dc(r)+'</td></tr>').join("")
       +(L.length?"":'<tr><td colspan="6" style="text-align:center;color:#737372;padding:16px">Aucune référence dans ce filtre.</td></tr>')+'</tbody></table></div>';
-    box.querySelector("#cmray").onchange=e=>{ cmpRay=e.target.value; cmpF="all"; cmpView(); };
-    box.querySelectorAll(".cm-pill").forEach(b=>b.onclick=()=>{ cmpF=b.dataset.f; cmpView(); });
+    box.querySelector("#cmray").onchange=e=>{ cmpRay=e.target.value; cmpF="all"; cmpSK="ca"; cmpSA=false; cmpView(); };
+    box.querySelectorAll(".cm-pill").forEach(b=>b.onclick=()=>{ cmpF=b.dataset.f; if(cmpF==="rat"){ cmpSK="d"; cmpSA=true; } else { cmpSK="ca"; cmpSA=false; } cmpView(); });
+    box.querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(cmpSK===k) cmpSA=!cmpSA; else { cmpSK=k; cmpSA=false; } cmpView(); });
   }
   const COLS=[
     {k:"nom",t:"Rayon",p:"client commerce stock"},
