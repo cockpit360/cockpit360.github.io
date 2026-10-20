@@ -1876,7 +1876,7 @@ function __dg(G){
     const exts=Object.keys(S); if(exts.indexOf(cmpExt)<0) cmpExt=exts[0];
     const rays=Object.keys(S[cmpExt]); if(rays.indexOf(cmpRay)<0) cmpRay=rays[0];
     const Z=S[cmpExt][cmpRay], T=Z.tot||[], X=eh(cmpExt),
-      R=Z.rows.map(r=>({c:r[0],l:r[1],ca:r[2],cp:r[3],cr:r[4],q:r[5],ca2:r[8],c2p:r[9],c2r:r[10],q2:r[11],d:r[8]==null?null:r[8]-r[2]}));
+      R=Z.rows.map(r=>({c:r[0],l:r[1],ca:r[2],cp:r[3],cr:r[4],q:r[5],ca2:r[8],c2p:r[9],c2r:r[10],q2:r[11],q2p:r[14],qp:r[6],dq:r[11]==null?null:r[11]-(r[5]||0),d:r[8]==null?null:r[8]-r[2]}));
     const rat=R.filter(r=>r.ca2!=null&&r.ca>r.ca2), imp=R.filter(r=>r.ca2==null), dev=R.filter(r=>r.ca2!=null&&r.ca2>=r.ca), top=R.reduce((x,r)=>x+(r.ca||0),0), top2=R.reduce((x,r)=>x+(r.ca2||0),0);
     let L=R.slice(); if(cmpF==="rat") L=rat.slice(); else if(cmpF==="imp") L=imp.slice(); else if(cmpF==="dev") L=dev.slice();
     L.sort((a,b)=>{ const x=a[cmpSK],y=b[cmpSK]; if(x==null&&y==null) return 0; if(x==null) return 1; if(y==null) return -1; if(typeof x==="string") return cmpSA?x.localeCompare(y):y.localeCompare(x); return cmpSA?x-y:y-x; });
@@ -1886,16 +1886,16 @@ function __dg(G){
       '<div class="cm-bar"><b>Mulhouse vs magasin comparé :</b><select id="cmext">'+exts.map(x=>'<option'+(x===cmpExt?" selected":"")+'>'+eh(x)+'</option>').join("")+'</select><select id="cmray">'+rays.map(x=>'<option'+(x===cmpRay?" selected":"")+'>'+eh(x)+'</option>').join("")+'</select>'
       +[["all","Toutes ("+R.length+")"],["rat","À rattraper ("+rat.length+")"],["imp","À implanter ("+imp.length+")"],["dev","Mulhouse devant ("+dev.length+")"]].map(f=>'<button type="button" class="cm-pill'+(cmpF===f[0]?" on":"")+'" data-f="'+f[0]+'">'+f[1]+'</button>').join("")
       +'<span class="sub" style="margin-left:auto">importé le '+eh(Z.imp||"")+' · envoi du '+eh(D.maj||"")+'</span></div>'
-      +'<div class="cm-k"><div><b>'+fmtN(T[0])+' €</b><span>Rayon '+eh(cmpRay)+' · magasin comparé ('+X+') '+sp(T[1])+(T[2]?" · n° "+T[2]:"")+'</span></div>'
-      +'<div><b>'+fmtN(T[6])+' €</b><span>Rayon '+eh(cmpRay)+' · Mulhouse '+sp(T[7])+(T[8]?" · n° "+T[8]:"")+'</span></div>'
+      +'<div class="cm-k"><div><b>'+fmtN(T[0])+' €</b><span>Rayon '+eh(cmpRay)+' · magasin comparé ('+X+') '+sp(T[1])+(T[2]?" · n° "+T[2]:"")+' · '+fmtN(T[3])+' u.</span></div>'
+      +'<div><b>'+fmtN(T[6])+' €</b><span>Rayon '+eh(cmpRay)+' · Mulhouse '+sp(T[7])+(T[8]?" · n° "+T[8]:"")+' · '+fmtN(T[9])+' u.</span></div>'
       +'<div><b>'+(T[6]!=null?sgnE(T[6]-T[0]):"—")+'</b><span>Écart de CA Mulhouse − '+X+'</span></div>'
       +'<div><b>'+(top>0?fmtN(top2/top*100,0)+" %":"—")+'</b><span>Sur le Top '+R.length+' de '+X+', ce que vend Mulhouse</span></div></div>'
       +'<div class="cm-lec">'+(rat.length?'<b>'+rat.length+' référence'+(rat.length>1?"s":"")+' du Top '+R.length+' de '+X+(rat.length>1?' se vendent':' se vend')+' mieux que chez Mulhouse</b> : '+worst+'. ':'Aucune référence du Top '+R.length+' de '+X+' ne se vend mieux que chez Mulhouse. ')
       +(imp.length?'<b>'+imp.length+(imp.length>1?' ne sont pas vendues':' n\'est pas vendue')+' à Mulhouse (à référencer / implanter)</b> : '+best+'.':"")+'</div>'
-      +'<div style="overflow:auto"><table><thead><tr>'+[["l","Référence"],["ca","CA magasin comparé ("+X+")"],["cr","Rang"],["ca2","CA Mulhouse"],["c2r","Rang"],["d","Écart €"]].map(h=>'<th data-k="'+h[0]+'" style="cursor:pointer" title="Trier">'+h[1]+(cmpSK===h[0]?(cmpSA?" ▲":" ▼"):"")+'</th>').join("")+'</tr></thead><tbody>'
-      +L.map(r=>'<tr><td>'+eh(r.l)+'<small>'+eh(r.c)+'</small></td><td><b>'+fmtN(r.ca)+'</b><small>'+sp(r.cp)+' · '+fmtN(r.q)+' u.</small></td><td>'+(r.cr==null?"—":"n° "+r.cr)+'</td>'
-         +'<td>'+(r.ca2==null?"—":'<b>'+fmtN(r.ca2)+'</b><small>'+sp(r.c2p)+' · '+fmtN(r.q2)+' u.</small>')+'</td><td>'+(r.c2r==null?"—":"n° "+r.c2r)+'</td><td>'+dc(r)+'</td></tr>').join("")
-      +(L.length?"":'<tr><td colspan="6" style="text-align:center;color:#737372;padding:16px">Aucune référence dans ce filtre.</td></tr>')+'</tbody></table></div>';
+      +'<div style="overflow:auto"><table><thead><tr>'+[["l","Référence"],["ca","CA magasin comparé ("+X+")"],["q","Qté vendue "+X],["cr","Rang CA"],["ca2","CA Mulhouse"],["q2","Qté vendue Mulhouse"],["c2r","Rang CA"],["d","Écart €"],["dq","Écart qté"]].map(h=>'<th data-k="'+h[0]+'" style="cursor:pointer" title="Trier">'+h[1]+(cmpSK===h[0]?(cmpSA?" ▲":" ▼"):"")+'</th>').join("")+'</tr></thead><tbody>'
+      +L.map(r=>'<tr><td>'+eh(r.l)+'<small>'+eh(r.c)+'</small></td><td><b>'+fmtN(r.ca)+'</b><small>'+sp(r.cp)+'</small></td><td><b>'+fmtN(r.q)+'</b><small>'+sp(r.qp)+'</small></td><td>'+(r.cr==null?"—":"n° "+r.cr)+'</td>'
+         +'<td>'+(r.ca2==null?"—":'<b>'+fmtN(r.ca2)+'</b><small>'+sp(r.c2p)+'</small>')+'</td><td>'+(r.ca2==null?"—":'<b>'+fmtN(r.q2)+'</b><small>'+(r.q2p==null?"":sp(r.q2p))+'</small>')+'</td><td>'+(r.c2r==null?"—":"n° "+r.c2r)+'</td><td>'+dc(r)+'</td><td>'+(r.dq==null?"—":'<span class="'+cl(r.dq)+'"><b>'+(r.dq>0?"+":"")+fmtN(r.dq)+' u.</b></span>')+'</td></tr>').join("")
+      +(L.length?"":'<tr><td colspan="9" style="text-align:center;color:#737372;padding:16px">Aucune référence dans ce filtre.</td></tr>')+'</tbody></table></div>';
     box.querySelector("#cmext").onchange=e=>{ cmpExt=e.target.value; cmpRay=null; cmpF="all"; cmpSK="ca"; cmpSA=false; cmpView(); };
     box.querySelector("#cmray").onchange=e=>{ cmpRay=e.target.value; cmpF="all"; cmpSK="ca"; cmpSA=false; cmpView(); };
     box.querySelectorAll(".cm-pill").forEach(b=>b.onclick=()=>{ cmpF=b.dataset.f; if(cmpF==="rat"){ cmpSK="d"; cmpSA=true; } else { cmpSK="ca"; cmpSA=false; } cmpView(); });
@@ -2722,7 +2722,12 @@ window.__logout=function(){try{['tractCacheKey','tractCacheJSON','tractCacheDate
     },350);
   }
   window.__ckHide=function(){ ck.classList.remove('show'); };
-  window.__ckShow=function(nosave){ draw(); ck.classList.add('show'); ck.scrollTop=0; try{ if(nosave!==true&&!(history.state&&history.state.home)) history.pushState({home:1},'',location.pathname+location.search); }catch(e){} };
+  /* adapte la page d'accueil à la taille de l'écran (ordinateur / tablette) : tout tient sans défiler ; téléphone : défilement normal */
+  function ckFit(){ try{ if(!ck.classList.contains('show')) return; var K=[].slice.call(ck.children); K.forEach(function(k){ k.style.zoom=''; }); if(window.innerWidth<700) return; var f=1;
+      for(var i=0;i<3;i++){ var h=K.reduce(function(a,k){ return a+k.getBoundingClientRect().height; },0); if(!h) return; var g=(window.innerHeight-4)/h; if(Math.abs(g-1)<0.015) break; f=Math.min(1.35,Math.max(.5,f*g)); K.forEach(function(k){ k.style.zoom=f; }); } }catch(e){} }
+  window.addEventListener('resize',function(){ clearTimeout(ckFit.t); ckFit.t=setTimeout(ckFit,120); });
+  window.__ckFit=ckFit;
+  window.__ckShow=function(nosave){ draw(); ck.classList.add('show'); ck.scrollTop=0; try{ if(nosave!==true&&!(history.state&&history.state.home)) history.pushState({home:1},'',location.pathname+location.search); }catch(e){} setTimeout(ckFit,0); setTimeout(ckFit,600); };
   var n=0, w=setInterval(function(){ n++; if(document.getElementById('appbar')&&document.getElementById('drwb')){ clearInterval(w); window.__ckShow(); } else if(n>200) clearInterval(w); },150);
 })();;
 /* ===== Historique 5 ans & objectifs ===== */
