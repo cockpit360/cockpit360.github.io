@@ -479,7 +479,7 @@ body:has(#passGate:not([style*="none"])) :is(#drw,#edgeMenu,#appbar){display:non
 #ck .tile.m .ggl{justify-content:center}
 #ck .tile.m .kv{font-size:13.5px;line-height:1.3}#ck .tile.m .kv b{display:block;font-size:14px}#ck .tile.m .kv small{display:block;color:#737372;font-size:11.5px}
 #ck .tile.m .st{align-self:center}
-#ck .kpl{display:inline-block;border-radius:999px;padding:5px 14px;font-weight:800;font-size:13.5px}#ck .kpl.on{background:#1e7a34;color:#fff}#ck .kpl.off{background:#e3f4e8;color:#1e7a34}
+#ck .kpl{display:inline-block;border-radius:999px;padding:6px 18px;font-weight:800;font-size:17px;min-width:44px}#ck .kpl.on{background:#1e7a34;color:#fff}#ck .kpl.off{background:#e3f4e8;color:#1e7a34}
 #ck .inf{position:absolute;top:8px;right:10px;width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:14px;color:#737372;cursor:help;outline:none}
 #ck .inf:hover,#ck .inf:focus{background:rgba(255,255,255,.8);color:#1d1d1b}
 #ck .inf::after{content:attr(data-i);display:none;position:absolute;top:26px;right:0;width:230px;background:#1d1d1b;color:#fff;font-size:12.5px;line-height:1.4;padding:8px 10px;border-radius:8px;text-align:left;z-index:5;font-weight:400;white-space:normal}
