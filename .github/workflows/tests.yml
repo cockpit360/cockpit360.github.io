@@ -1,0 +1,18 @@
+name: Tests Cockpit 360
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  playwright:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: rapport-playwright, path: test-results/ }
